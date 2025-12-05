@@ -25,5 +25,55 @@ FigConfig: dict[str, SimulationArgs] = {
         ),
         simulation_time=60_000,
         step_time=0.1,
+    ),
+    "P": SimulationArgs(
+        calcium=CalciumArgs(
+            tau_ca=20,
+            c_pre=2,
+            c_post=2,
+            D=0,
+        ),
+        synapse=SynapticArgs(
+            tau=150_000,
+            rho_star=0.5,
+            gamma_d=160,
+            gamma_p=257.447,
+            theta_d=1,
+            theta_p=1.3,
+            sigma=2.8284,
+            up_down_strength_ratio=5,
+            down_init_probability=0.5,
+        ),
+        neuron=NeuronArgs(
+            spike_rate=0.001,
+            pre_post_delay=0,
+        ),
+        simulation_time=60_000,
+        step_time=0.1,
+    ),
+    "D": SimulationArgs(
+        calcium=CalciumArgs(
+            tau_ca=20,
+            c_pre=0.6,
+            c_post=0.6,
+            D=0,
+        ),
+        synapse=SynapticArgs(
+            tau=150_000,
+            rho_star=0.5,
+            gamma_d=500,
+            gamma_p=550,
+            theta_d=1,
+            theta_p=1.3,
+            sigma=5.6568,
+            up_down_strength_ratio=5,
+            down_init_probability=0.5,
+        ),
+        neuron=NeuronArgs(
+            spike_rate=0.001,
+            pre_post_delay=0,
+        ),
+        simulation_time=60_000,
+        step_time=0.1,
     )
 }
