@@ -1,4 +1,5 @@
 import copy
+from pathlib import Path
 
 import fire
 import matplotlib.pyplot as plt
@@ -8,7 +9,6 @@ from tqdm import tqdm
 
 from args import SimulationArgs
 from config import FigConfig
-from utils import get_run_path
 
 
 def run(
@@ -22,6 +22,14 @@ def run(
     assert isinstance(args.neuron.pre_post_delay, torch.Tensor)
 
     calcium = torch.zeros((num_runs, len(args.calcium)))
+    cpre = torch.zeros_like(calcium)
+    cpost = torch.zeros_like(calcium)
+    cNL  = torch.zeros_like(calcium)
+
+    # compute scaled amplitudes for current extracellular Ca
+    Cpre_scaled = args.calcium.c_pre * (args.calcium.extracellular_ca ** args.calcium.a_pre)
+    Cpost_scaled = args.calcium.c_post * (args.calcium.extracellular_ca ** args.calcium.a_post)
+
     rho_init = (
         torch.arange(0, 1, 1 / num_runs)[:, None]
         >= args.synapse.down_init_probability[None, :]
@@ -36,11 +44,19 @@ def run(
     for step_idx in tqdm(range(num_steps)):
         is_pre_spike = (step_idx - pre_spike_shift) % spike_step_period == 0
         is_post_spike = (step_idx - post_spike_shift) % spike_step_period == 0
-        dcalcium = (
-            -calcium * args.step_time / args.calcium.tau_ca
-            + args.calcium.c_pre * is_pre_spike
-            + args.calcium.c_post * is_post_spike
+        # decay steps (applied every dt)
+        dc_pre =  (
+            - cpre* args.step_time / args.calcium.tau_ca
+            + Cpre_scaled * is_pre_spike
         )
+        dc_post =  (
+            - cpost * args.step_time / args.calcium.tau_ca
+            + Cpost_scaled * is_post_spike
+        )
+        dc_NL  = (
+            - cNL * args.step_time  / args.calcium.tau_ca_NMDA 
+            + args.calcium.eta * cpre * cpost
+            ) 
 
         drho = (
             # deterministic part
@@ -58,7 +74,10 @@ def run(
             * (args.step_time / args.synapse.tau) ** (1 / 2)
         )
 
-        calcium += dcalcium
+        cpre += dc_pre
+        cpost += dc_post
+        cNL += dc_NL
+        calcium = cpre + cpost + cNL
         rho += drho
 
     rho_final = rho > args.synapse.rho_star
@@ -73,7 +92,7 @@ def main(
     pre_post_delay_step: float = 5,
     num_runs: int = 100,
 ) -> None:
-    run_path = get_run_path(run_name)
+    run_path = Path(__file__).parent / "runs" / run_name
     run_path.mkdir(exist_ok=True, parents=True)
 
     default_args = FigConfig[config_name]

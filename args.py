@@ -45,23 +45,31 @@ class TensorArgs:
 @dataclass
 class CalciumArgs(TensorArgs):
     r"""
-    Parameters of 3.1.1 Simplified calcium model (1).
-    \frac{dc}{dt} =
-        - \frac{c}{\tau_{Ca}}
-        + C_{pre} \sum_i \delta(t - t_i - D)
-        + C_{post} \sum_j \delta(t - t_j)
+    Parameters of a more biophysically-inspired calcium model. 
     """
 
     # calcium relaxation time (ms)
     tau_ca: ArgType
 
-    # pre/post calcium aplitudes
+    # pre/post calcium amplitudes
     c_pre: ArgType
     c_post: ArgType
 
-    # time delay etween presynaptic spike and calcium transient (ms)
+    # time delay between presynaptic spike and calcium transient (ms)
     D: ArgType
 
+    # extracellular calcium concentration (mM)
+    extracellular_ca: ArgType
+
+    # scaling exponents
+    a_pre: ArgType
+    a_post: ArgType
+
+    # decay time scale of non-linear transients (ms)
+    tau_ca_NMDA: ArgType
+
+    # strength of non-linearity (1/ms)
+    eta: ArgType
 
 @dataclass
 class SynapticArgs(TensorArgs):
@@ -103,7 +111,7 @@ class NeuronArgs(TensorArgs):
 
 @dataclass
 class SimulationArgs:
-    calcium: CalciumArgs
+    calcium: CalciumArgs 
     synapse: SynapticArgs
     neuron: NeuronArgs
 
